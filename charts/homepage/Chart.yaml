@@ -6,7 +6,7 @@ description: >-
   jameswynn/helm-charts, which pinned common to a stale version whose Route
   template hardcoded a Gateway API version some clusters' HTTPRoute CRD doesn't
   serve.
-version: 0.1.0
+version: 0.2.0
 appVersion: v1.13.2
 home: https://github.com/BryanR77/homelab-helm-charts
 sources:

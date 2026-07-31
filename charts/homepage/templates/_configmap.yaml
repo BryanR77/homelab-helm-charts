@@ -30,6 +30,12 @@ data:
 {{- .Values.config.kubernetesString | nindent 4 }}
 {{- else }} ""
 {{- end }}
+  proxmox.yaml: {{- if .Values.config.proxmox }} |
+{{- .Values.config.proxmox | toYaml | nindent 4 }}
+{{- else if .Values.config.proxmoxString }} |
+{{- .Values.config.proxmoxString | nindent 4 }}
+{{- else }} ""
+{{- end }}
   services.yaml: {{- if .Values.config.services }} |
 {{- .Values.config.services | toYaml | nindent 4 }}
 {{- else if .Values.config.servicesString }} |

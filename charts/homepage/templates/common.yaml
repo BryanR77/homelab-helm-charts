@@ -50,7 +50,7 @@ config change forces a pod restart on the next sync.
 ) -}}
 {{- end }}
 
-{{- /* Six-file config, individually subPath-mounted so custom css/js can still occupy /app/config */ -}}
+{{- /* Seven-file config, individually subPath-mounted so custom css/js can still occupy /app/config */ -}}
 {{- $configName := include "bjw-s.common.lib.chart.names.fullname" . -}}
 {{- $configMapName := $configName -}}
 {{- if .Values.config.useExistingConfigMap -}}
@@ -63,6 +63,7 @@ config change forces a pod restart on the next sync.
     (dict "path" "/app/config/bookmarks.yaml" "subPath" "bookmarks.yaml")
     (dict "path" "/app/config/docker.yaml" "subPath" "docker.yaml")
     (dict "path" "/app/config/kubernetes.yaml" "subPath" "kubernetes.yaml")
+    (dict "path" "/app/config/proxmox.yaml" "subPath" "proxmox.yaml")
     (dict "path" "/app/config/services.yaml" "subPath" "services.yaml")
     (dict "path" "/app/config/settings.yaml" "subPath" "settings.yaml")
     (dict "path" "/app/config/widgets.yaml" "subPath" "widgets.yaml")
