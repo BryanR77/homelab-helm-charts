@@ -1,0 +1,18 @@
+apiVersion: v2
+name: homepage
+description: >-
+  Wrapper chart for gethomepage/homepage (https://github.com/gethomepage/homepage),
+  built directly on the actively maintained bjw-s-labs common library. Replaces
+  jameswynn/helm-charts, which pinned common to a stale version whose Route
+  template hardcoded a Gateway API version some clusters' HTTPRoute CRD doesn't
+  serve.
+version: 0.1.0
+appVersion: v1.13.2
+home: https://github.com/BryanR77/homelab-helm-charts
+sources:
+  - https://github.com/gethomepage/homepage
+  - https://github.com/bjw-s-labs/helm-charts
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.0.1

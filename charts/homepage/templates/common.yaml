@@ -1,0 +1,64 @@
+{{/*
+Remaps this chart's flat, homepage-specific values onto the schema the bjw-s
+common library (v5+) actually expects, the same way jameswynn/helm-charts'
+homepage chart (Apache-2.0) did against the old (v1.5.x) common schema. See
+templates/_configmap.yaml for attribution on the adapted ConfigMap logic.
+*/}}
+{{- include "bjw-s.common.loader.init" . }}
+
+{{- define "homepage.hardcodedValues" -}}
+{{- if not .Values.global.nameOverride }}
+global:
+  nameOverride: "{{ .Release.Name }}"
+{{- end }}
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "homepage.hardcodedValues" . | fromYaml) -}}
+
+{{- /* Map image/env onto the single controller/container */ -}}
+{{- $_ := set .Values "controllers" (dict "main" (dict
+  "strategy" "RollingUpdate"
+  "pod" (dict "automountServiceAccountToken" .Values.enableRbac)
+  "containers" (dict "main" (dict "image" .Values.image "env" (.Values.env | default list)))
+)) -}}
+
+{{- /* Homepage always listens on 3000 */ -}}
+{{- $_ := set .Values "service" (dict "main" (dict "controller" "main" "ports" (dict "http" (dict "port" 3000)))) -}}
+
+{{- if .Values.enableRbac }}
+{{- $_ := set .Values "serviceAccount" (dict "main" dict) -}}
+{{- $_ := set .Values "rbac" (dict
+  "roles" (dict "main" (dict "type" "ClusterRole" "rules" (concat (list
+    (dict "apiGroups" (list "") "resources" (list "namespaces" "pods" "nodes") "verbs" (list "get" "list"))
+    (dict "apiGroups" (list "extensions" "networking.k8s.io") "resources" (list "ingresses") "verbs" (list "get" "list"))
+    (dict "apiGroups" (list "traefik.containo.us" "traefik.io") "resources" (list "ingressroutes") "verbs" (list "get" "list"))
+    (dict "apiGroups" (list "gateway.networking.k8s.io") "resources" (list "httproutes" "gateways") "verbs" (list "get" "list"))
+    (dict "apiGroups" (list "metrics.k8s.io") "resources" (list "nodes" "pods") "verbs" (list "get" "list"))
+    (dict "apiGroups" (list "apiextensions.k8s.io") "resources" (list "customresourcedefinitions/status") "verbs" (list "get"))
+  ) (.Values.extraClusterRoles | default list))))
+  "bindings" (dict "main" (dict "type" "ClusterRoleBinding" "roleRef" (dict "identifier" "main") "subjects" (list (dict "identifier" "main"))))
+) -}}
+{{- end }}
+
+{{- /* Six-file config, individually subPath-mounted so custom css/js can still occupy /app/config */ -}}
+{{- $configName := include "bjw-s.common.lib.chart.names.fullname" . -}}
+{{- $configMapName := $configName -}}
+{{- if .Values.config.useExistingConfigMap -}}
+{{- $configMapName = .Values.config.useExistingConfigMap -}}
+{{- end -}}
+{{- $_ := set .Values "persistence" (dict
+  "base-config" (dict "type" "emptyDir" "globalMounts" (list (dict "path" "/app/config")))
+  "logs" (dict "type" "emptyDir" "globalMounts" (list (dict "path" "/app/config/logs")))
+  "config" (dict "type" "configMap" "name" $configMapName "globalMounts" (list
+    (dict "path" "/app/config/bookmarks.yaml" "subPath" "bookmarks.yaml")
+    (dict "path" "/app/config/docker.yaml" "subPath" "docker.yaml")
+    (dict "path" "/app/config/kubernetes.yaml" "subPath" "kubernetes.yaml")
+    (dict "path" "/app/config/services.yaml" "subPath" "services.yaml")
+    (dict "path" "/app/config/settings.yaml" "subPath" "settings.yaml")
+    (dict "path" "/app/config/widgets.yaml" "subPath" "widgets.yaml")
+  ))
+) -}}
+
+{{- if not .Values.config.useExistingConfigMap }}
+{{ include "homepage.configmap" . }}
+{{- end }}
+{{ include "bjw-s.common.loader.generate" . }}

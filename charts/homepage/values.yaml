@@ -1,0 +1,24 @@
+# Default values for the homepage wrapper chart.
+# See README.md for the full set of supported keys.
+
+image:
+  repository: ghcr.io/gethomepage/homepage
+  # tag: defaults to the chart's appVersion if unset
+
+# Set to true to grant the pod read-only cluster access for the Kubernetes
+# widget (cluster/node stats, HTTPRoute/Ingress discovery for gethomepage.dev
+# labels/annotations).
+enableRbac: false
+
+# Additional PolicyRules appended to the generated ClusterRole when enableRbac
+# is true.
+extraClusterRoles: []
+
+env: []
+
+# All of Homepage's config files can be set here. Each key also accepts a
+# "<key>String" variant (e.g. servicesString) for cases where key ordering
+# matters — toYaml sorts map keys alphabetically, which scrambles anything
+# where display order matters (group/section ordering, settings.layout).
+config: {}
+  # useExistingConfigMap: existing-homepage-configmap
