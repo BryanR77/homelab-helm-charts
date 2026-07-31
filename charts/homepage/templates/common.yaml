@@ -15,9 +15,20 @@ global:
 {{- $_ := mergeOverwrite .Values (include "homepage.hardcodedValues" . | fromYaml) -}}
 
 {{- /* Map image/env onto the single controller/container */ -}}
+{{- /*
+Config is subPath-mounted (see persistence.config below), so the kubelet never
+hot-reloads it, and it's templated by our own _configmap.yaml rather than
+bjw-s common's configMaps: block, so common's automatic checksum/configMaps
+annotation never fires for it either. Roll our own checksum annotation so a
+config change forces a pod restart on the next sync.
+*/ -}}
+{{- $podAnnotations := dict -}}
+{{- if not .Values.config.useExistingConfigMap -}}
+{{- $_ := set $podAnnotations "checksum/config" (toYaml .Values.config | sha256sum) -}}
+{{- end -}}
 {{- $_ := set .Values "controllers" (dict "main" (dict
   "strategy" "RollingUpdate"
-  "pod" (dict "automountServiceAccountToken" .Values.enableRbac)
+  "pod" (dict "automountServiceAccountToken" .Values.enableRbac "annotations" $podAnnotations)
   "containers" (dict "main" (dict "image" .Values.image "env" (.Values.env | default list)))
 )) -}}
 
